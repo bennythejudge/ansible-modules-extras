@@ -60,6 +60,12 @@ options:
     description:
     - If yes, allows to remove volume group with logical volumes.
     required: false
+  reduce_vg:
+    choices: ["yes", "no" ]
+    default: "yes"
+    description:
+    - If yes, it tries to remove the existing volumes when extending.
+    - If not, it only adds to the VG, without reducing
 notes:
   - module does not modify PE size for already present volume group
 '''
@@ -121,6 +127,7 @@ def main():
             vg_options=dict(default=''),
             state=dict(choices=["absent", "present"], default='present'),
             force=dict(type='bool', default='no'),
+            vg_reduce=dict(type='bool', default='yes')
         ),
         supports_check_mode=True,
     )
@@ -130,6 +137,7 @@ def main():
     force = module.boolean(module.params['force'])
     pesize = module.params['pesize']
     vgoptions = module.params['vg_options'].split()
+    vg_reduce = module.params['vg_reduce']
 
     if module.params['pvs']:
         dev_list = module.params['pvs']
@@ -238,15 +246,16 @@ def main():
                     else:
                         module.fail_json(msg="Unable to extend %s by %s."%(vg, devs_to_add_string),rc=rc,err=err)
 
-                ### remove some PV from our VG
-                if devs_to_remove:
-                    devs_to_remove_string = ' '.join(devs_to_remove)
-                    vgreduce_cmd = module.get_bin_path('vgreduce', True)
-                    rc,_,err = module.run_command("%s --force %s %s" % (vgreduce_cmd, vg, devs_to_remove_string))
-                    if rc == 0:
-                        changed = True
-                    else:
-                        module.fail_json(msg="Unable to reduce %s by %s."%(vg, devs_to_remove_string),rc=rc,err=err)
+                ### remove some PV from our VG, if desired
+                if vg_reduce and vg_reduce == 'yes':
+                    if devs_to_remove:
+                        devs_to_remove_string = ' '.join(devs_to_remove)
+                        vgreduce_cmd = module.get_bin_path('vgreduce', True)
+                        rc,_,err = module.run_command("%s --force %s %s" % (vgreduce_cmd, vg, devs_to_remove_string))
+                        if rc == 0:
+                            changed = True
+                        else:
+                            module.fail_json(msg="Unable to reduce %s by %s."%(vg, devs_to_remove_string),rc=rc,err=err)
 
     module.exit_json(changed=changed)
 
