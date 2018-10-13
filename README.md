@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ansible/ansible-modules-extras.svg?branch=devel)](https://travis-ci.org/ansible/ansible-modules-extras)
+[![Build Status](https://travis-ci.org/ansible/ansible-modules-extras.svg?branch=devel)](https://travis-ci.org/ansible/ansible-modules-extras) [![GuardRails badge](https://badges.production.guardrails.io/bennythejudge/ansible-modules-extras.svg)](https://www.guardrails.io)
 
 ansible-modules-extras
 ======================
